@@ -1,6 +1,6 @@
 import fp from "fastify-plugin";
 import type { FastifyPluginAsync } from "fastify";
-import { Xendit, Balance } from "xendit-node";
+import { Xendit, Balance, Payout } from "xendit-node";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -9,7 +9,7 @@ declare module "fastify" {
   interface FastifyInstance {
     xendit: {
       balance: Balance;
-      // Tambahkan client lain sesuai kebutuhan
+      payout: Payout;
     };
   }
 }
@@ -21,9 +21,10 @@ const xenditPlugin: FastifyPluginAsync = async (fastify, options) => {
 
   fastify.decorate("xendit", {
     balance: xenditClient.Balance,
+    payout: xenditClient.Payout,
   });
 
-  // Tambahkan health check
+  // Health check
   fastify.addHook("onReady", async () => {
     try {
       await xenditClient.Balance.getBalance({ accountType: "CASH" });
