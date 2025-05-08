@@ -1,25 +1,25 @@
 import fp from "fastify-plugin";
-import knex, { Knex } from "knex";
-import type { FastifyPluginAsync } from "fastify";
-import config from "../knexfile.js";
+import { FastifyPluginAsync } from "fastify";
+import { PrismaClient } from "@prisma/client";
 
+// Use TypeScript module augmentation to declare the type of server.prisma to be PrismaClient
 declare module "fastify" {
   interface FastifyInstance {
-    knex: Knex;
+    prisma: PrismaClient;
   }
 }
 
-const knexPlugin: FastifyPluginAsync<Knex.Config> = async (fastify, options) => {
-  if (!fastify.knex) {
-    const db = knex(config.development);
-    fastify.decorate("knex", db);
+const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
+  const prisma = new PrismaClient();
 
-    fastify.addHook("onClose", async (instance) => {
-      if (instance.knex === db) {
-        await instance.knex.destroy();
-      }
-    });
-  }
-};
+  await prisma.$connect();
 
-export default fp(knexPlugin);
+  // Make Prisma Client available through the fastify server instance: server.prisma
+  server.decorate("prisma", prisma);
+
+  server.addHook("onClose", async (server) => {
+    await server.prisma.$disconnect();
+  });
+});
+
+export default prismaPlugin;

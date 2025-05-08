@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PG_CONNECTION_STRING")
+}
+
+model User {
+  id        String           @id @default(uuid())
+  username  String           @unique
+  name      String?
+  email     String           @unique
+  photo     String?
+  password  String
+  createdAt DateTime         @default(now())
+  oauthAccounts OauthAccount[]
+  wasteTransactions WasteTransaction[]
+}
+
+model OauthAccount {
+  id          Int     @id @default(autoincrement())
+  userId      String
+  provider    String
+  providerId  String
+  accessToken String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+}
+
+model WasteType {
+  id    Int    @id @default(autoincrement())
+  type  String
+  point Int
+
+  WasteTransaction WasteTransaction[]
+}
+
+model TrashInfo {
+  id           Int      @id @default(autoincrement())
+  location     String
+  description  String
+  collectedAt  DateTime?
+  latitude     Decimal  @db.Decimal(9, 6)
+  longitude    Decimal  @db.Decimal(9, 6)
+  status       String
+  createdAt    DateTime @default(now())
+}
+
+model WasteTransaction {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  wasteTypeId  Int?
+  point        Int
+  createdAt    DateTime @default(now())
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wasteType   WasteType? @relation(fields: [wasteTypeId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([wasteTypeId])
+}
