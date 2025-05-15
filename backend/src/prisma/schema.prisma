@@ -15,14 +15,18 @@ datasource db {
 
 model User {
   id        String           @id @default(uuid())
-  username  String           @unique
   name      String?
   email     String           @unique
   photo     String?
+  point     Int              @default(0)
   password  String
   createdAt DateTime         @default(now())
   oauthAccounts OauthAccount[]
-  wasteTransactions WasteTransaction[]
+  RefreshToken RefreshToken[]
+
+  RedeemToken RedeemToken[]
+
+  RedemptionHistory RedemptionHistory[]
 }
 
 model OauthAccount {
@@ -38,14 +42,6 @@ model OauthAccount {
   @@unique([userId, provider])
 }
 
-model WasteType {
-  id    Int    @id @default(autoincrement())
-  type  String
-  point Int
-
-  WasteTransaction WasteTransaction[]
-}
-
 model TrashInfo {
   id           Int      @id @default(autoincrement())
   location     String
@@ -57,16 +53,33 @@ model TrashInfo {
   createdAt    DateTime @default(now())
 }
 
-model WasteTransaction {
+model RedemptionHistory {
   id           Int      @id @default(autoincrement())
   userId       String
-  wasteTypeId  Int?
   point        Int
+  token        String
+  wasteType    String?
   createdAt    DateTime @default(now())
 
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wasteType   WasteType? @relation(fields: [wasteTypeId], references: [id], onDelete: SetNull)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([wasteTypeId])
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model RedeemToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  point     Int
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
