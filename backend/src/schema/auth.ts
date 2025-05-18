@@ -1,3 +1,19 @@
+import { baseResponse, errorResponse } from "./common.js";
+
+const userProperties = {
+  id: { type: "string" },
+  name: { type: "string" },
+  email: { type: "string", format: "email" },
+  photo: { type: "string" },
+  point: { type: "number" },
+  createdAt: { type: "string", format: "date-time" },
+};
+
+const tokenProperties = {
+  access_token: { type: "string" },
+  refresh_token: { type: "string" },
+};
+
 export const registerSchema = {
   summary: "Register user",
   tags: ["Auth"],
@@ -5,54 +21,30 @@ export const registerSchema = {
     type: "object",
     required: ["name", "email", "password"],
     properties: {
-      id: { type: "string" },
       name: { type: "string" },
       email: { type: "string", format: "email" },
       password: { type: "string" },
     },
   },
   response: {
-    200: {
+    201: {
       type: "object",
       properties: {
-        status: { type: "string" },
-        message: { type: "string" },
+        ...baseResponse,
         data: {
           type: "object",
           properties: {
             user: {
               type: "object",
-              properties: {
-                id: { type: "string" },
-                username: { type: "string" },
-                email: { type: "string" },
-                name: { type: "string" },
-                createdAt: { type: "string", format: "date-time" },
-                photo: { type: "string" },
-              },
+              properties: userProperties,
             },
-            access_token: { type: "string" },
-            refresh_token: { type: "string" },
+            ...tokenProperties,
           },
         },
       },
     },
-    401: {
-      type: "object",
-      properties: {
-        status: { type: "string" },
-        message: { type: "string" },
-        code: { type: "string" },
-      },
-    },
-    500: {
-      type: "object",
-      properties: {
-        status: { type: "string" },
-        message: { type: "string" },
-        code: { type: "string" },
-      },
-    },
+    409: errorResponse,
+    500: errorResponse,
   },
 };
 
@@ -63,7 +55,7 @@ export const loginSchema = {
     type: "object",
     required: ["email", "password"],
     properties: {
-      email: { type: "string" },
+      email: { type: "string", format: "email" },
       password: { type: "string" },
     },
   },
@@ -71,36 +63,21 @@ export const loginSchema = {
     200: {
       type: "object",
       properties: {
-        status: { type: "string" },
-        message: { type: "string" },
+        ...baseResponse,
         data: {
           type: "object",
           properties: {
             user: {
               type: "object",
-              properties: {
-                id: { type: "string" },
-                name: { type: "string" },
-                email: { type: "string" },
-                photo: { type: "string" },
-                point: { type: "number" },
-                createdAt: { type: "string" },
-              },
+              properties: userProperties,
             },
-            access_token: { type: "string" },
-            refresh_token: { type: "string" },
+            ...tokenProperties,
           },
         },
       },
     },
-    401: {
-      type: "object",
-      properties: {
-        status: { type: "string" },
-        message: { type: "string" },
-        code: { type: "string" },
-      },
-    },
+    401: errorResponse,
+    500: errorResponse,
   },
 };
 
@@ -111,41 +88,18 @@ export const meSchema = {
     200: {
       type: "object",
       properties: {
-        status: { type: "string" },
-        message: { type: "string" },
+        ...baseResponse,
         data: {
           type: "object",
           properties: {
             user: {
               type: "object",
-              properties: {
-                id: { type: "string" },
-                email: { type: "string" },
-                name: { type: "string" },
-                photo: { type: "string" },
-                point: { type: "number" },
-                createdAt: { type: "string" },
-              },
+              properties: userProperties,
             },
           },
         },
       },
     },
-  },
-  401: {
-    type: "object",
-    properties: {
-      status: { type: "string" },
-      message: { type: "string" },
-      code: { type: "string" },
-    },
-  },
-  500: {
-    type: "object",
-    properties: {
-      status: { type: "string" },
-      message: { type: "string" },
-      code: { type: "string" },
-    },
+    500: errorResponse,
   },
 };
