@@ -11,3 +11,11 @@ export const errorResponse = {
     message: { type: "string" },
   },
 };
+
+export const headerAuth = {
+  type: "object",
+  properties: {
+    authorization: { type: "string" },
+  },
+  required: ["authorization"],
+};

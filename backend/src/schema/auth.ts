@@ -1,4 +1,4 @@
-import { baseResponse, errorResponse } from "./common.js";
+import { baseResponse, errorResponse, headerAuth } from "./common.js";
 
 const userProperties = {
   id: { type: "string" },
@@ -84,6 +84,7 @@ export const loginSchema = {
 export const meSchema = {
   summary: "Get user profile",
   tags: ["Auth"],
+  headers: headerAuth,
   response: {
     200: {
       type: "object",
@@ -100,6 +101,45 @@ export const meSchema = {
         },
       },
     },
+    500: errorResponse,
+  },
+};
+
+export const logoutSchema = {
+  summary: "Logout user",
+  tags: ["Auth"],
+  headers: headerAuth,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        ...baseResponse,
+        message: { type: "string" },
+      },
+    },
+    401: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const refreshTokenSchema = {
+  summary: "Refresh access token",
+  tags: ["Auth"],
+  headers: headerAuth,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        ...baseResponse,
+        data: {
+          type: "object",
+          properties: {
+            ...tokenProperties,
+          },
+        },
+      },
+    },
+    401: errorResponse,
     500: errorResponse,
   },
 };
