@@ -13,7 +13,8 @@ export default fp(async (fastify) => {
       },
       tags: [
         { name: "Auth", description: "Authentication routes" },
-        { name: "User", description: "User management" },
+        { name: "Token", description: "Token routes" },
+        { name: "Trashbin", description: "Trashbin routes" },
       ],
       components: {
         securitySchemes: {
