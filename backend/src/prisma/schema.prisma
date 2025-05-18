@@ -14,72 +14,169 @@ datasource db {
 }
 
 model User {
-  id        String           @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String?
-  email     String           @unique
+  email     String   @unique
   photo     String?
-  point     Int              @default(0)
+  point     Int      @default(0)
   password  String
-  createdAt DateTime         @default(now())
-  oauthAccounts OauthAccount[]
-  RefreshToken RefreshToken[]
+  createdAt DateTime @default(now())
 
-  RedeemToken RedeemToken[]
+  OauthAccounts     OauthAccount[]
+  RefreshToken      RefreshToken[]
+  RedemptionHistory PointTransaction[]
+  RewardToken       RewardToken[]
 
-  RedemptionHistory RedemptionHistory[]
+  RewardRedemption RewardRedemption[]
 }
 
 model OauthAccount {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   userId      String
   provider    String
   providerId  String
   accessToken String
   createdAt   DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider])
-}
-
-model TrashInfo {
-  id           Int      @id @default(autoincrement())
-  location     String
-  description  String
-  collectedAt  DateTime?
-  latitude     Decimal  @db.Decimal(9, 6)
-  longitude    Decimal  @db.Decimal(9, 6)
-  status       String
-  createdAt    DateTime @default(now())
-}
-
-model RedemptionHistory {
-  id           Int      @id @default(autoincrement())
-  userId       String
-  point        Int
-  token        String
-  wasteType    String?
-  createdAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  User User @relation(fields: [userId], references: [id])
 }
 
+model TrashBin {
+  id          String         @id @default(uuid())
+  name        String
+  status      TrashBinStatus @default(ONLINE)
+  location    String?
+  description String?
+  latitude    Decimal        @db.Decimal(10, 8)
+  longitude   Decimal        @db.Decimal(11, 8)
+  createdAt   DateTime       @default(now())
 
-model RedeemToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  point     Int
-  userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  RewardToken RewardToken[]
+
+  PointTransactionDetail PointTransactionDetail[]
+}
+
+enum TrashBinStatus {
+  ONLINE
+  FULL
+  ERROR
+  OFFLINE
+}
+
+model TrashCode {
+  id         Int       @id @default(autoincrement())
+  token      String    @unique
+  point      Int
+  type       String?
+  redeemedAt DateTime?
+  merchantId String?
+  createdAt  DateTime  @default(now())
+
+  RewardToken            RewardToken[]
+  PointTransactionDetail PointTransactionDetail[]
+}
+
+model RewardToken {
+  id         Int       @id @default(autoincrement())
+  tokenId    Int
+  rewardHash String
+  userId     String?
+  trashBinId String
+  createdAt  DateTime  @default(now())
+  redeemedAt DateTime?
+
+  User      User?     @relation(fields: [userId], references: [id])
+  TrashCode TrashCode @relation(fields: [tokenId], references: [id])
+  TrashBin  TrashBin  @relation(fields: [trashBinId], references: [id])
+
+  PointTransactionDetail PointTransactionDetail[]
+}
+
+model PointTransaction {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String?
+  userId      String
+  point       Int
+  type        TransactionType
+  createdAt   DateTime        @default(now())
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  PointTransactionDetail PointTransactionDetail[]
+
+  @@index([userId])
+}
+
+enum TransactionType {
+  IN
+  OUT
+  ADJUST
+}
+
+model PointTransactionDetail {
+  id                 Int      @id @default(autoincrement())
+  pointTransactionId Int
+  rewardTokenId      Int?
+  trashBinId         String
+  trashCodeId        Int?
+  createdAt          DateTime @default(now())
+
+  PointTransaction PointTransaction @relation(fields: [pointTransactionId], references: [id], onDelete: Cascade)
+  TrashBin         TrashBin         @relation(fields: [trashBinId], references: [id], onDelete: Cascade)
+  TrashCode        TrashCode?       @relation(fields: [trashCodeId], references: [id], onDelete: Cascade)
+  RewardToken      RewardToken?     @relation(fields: [rewardTokenId], references: [id], onDelete: Cascade)
+}
+
+model RewardRedemption {
+  id            Int                    @id @default(autoincrement())
+  userId        String
+  type          RewardRedemptionType
+  provider      String
+  point         Int
+  amount        Int
+  status        RewardRedemptionStatus @default(PENDING)
+  target        String?
+  referenceCode String?
+  description   String?
+  createdAt     DateTime               @default(now())
+  completedAt   DateTime?
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum RewardRedemptionType {
+  EWALLET
+}
+
+enum RewardRedemptionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model PointExchangeTemplate {
+  id          Int      @id @default(autoincrement())
+  type        String
+  title       String
+  description String?
+  image       String?
+  point       Int
+  amount      Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([type, point])
 }
