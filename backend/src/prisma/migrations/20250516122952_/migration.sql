@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "TrashBin" ALTER COLUMN "status" SET DEFAULT 'ONLINE';
