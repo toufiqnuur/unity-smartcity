@@ -6,17 +6,9 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
   const { name, email, password } = request.body as Record<string, string>;
 
   try {
-    const user = await request.server.prisma.$transaction(async (tx) => {
-      const hashedPassword = await argon2.hash(password);
-      const result = await tx.user.create({
-        data: { name, email, password: hashedPassword },
-      });
-
-      await tx.refreshToken.create({
-        data: { token: "", userId: result.id },
-      });
-
-      return result;
+    const hashedPassword = await argon2.hash(password);
+    const user = await request.server.prisma.user.create({
+      data: { name, email, password: hashedPassword },
     });
 
     return reply.send({
@@ -63,9 +55,16 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     const access_token = request.server.jwt.sign({ userId: user.id }, { expiresIn: "15m" });
     const refresh_token = request.server.jwt.sign({ userId: user.id }, { expiresIn: "7d" });
 
-    await request.server.prisma.refreshToken.update({
+    await request.server.prisma.refreshToken.upsert({
       where: { userId: user.id },
-      data: { token: refresh_token, updatedAt: new Date() },
+      update: {
+        token: refresh_token,
+        updatedAt: new Date(),
+      },
+      create: {
+        token: refresh_token,
+        userId: user.id,
+      },
     });
 
     return reply.send({

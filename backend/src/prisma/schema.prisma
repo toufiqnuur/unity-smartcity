@@ -45,7 +45,7 @@ model OauthAccount {
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
-  token     String   @unique
+  token     String?
   userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
